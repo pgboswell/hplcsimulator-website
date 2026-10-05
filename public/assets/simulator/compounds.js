@@ -101,7 +101,7 @@ const phases = [
       },
       {
         "id": 5,
-        "name": "propiopheneone",
+        "name": "propiophenone",
         "coefficients": [
           [
             -0.006169389,
