@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 (async()=>{
   const code=fs.readFileSync('functions/api/contact.js','utf8');
   const {onRequest}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
-  const env={CONTACT_TO:'private@example.net',CONTACT_FROM:'contact@example.org',RESEND_API_KEY:'test-secret',TURNSTILE_SITE_KEY:'public-key',TURNSTILE_SECRET_KEY:'private-key'};
+  const env={CONTACT_TO:'private@example.net',CONTACT_FROM:'contact@example.org',MAILGUN_API_KEY:'test-secret',MAILGUN_DOMAIN:'mg.example.org',TURNSTILE_SITE_KEY:'public-key',TURNSTILE_SECRET_KEY:'private-key'};
   const values={name:'Test Person',email:'visitor@example.net',subject:'Test',message:'A test message','cf-turnstile-response':'token'};
   const request=(v=values,origin='https://example.org')=>new Request('https://example.org/api/contact',{method:'POST',headers:{Origin:origin},body:new URLSearchParams(v)});
   let calls=[],verified=true,mailOK=true,hostname='example.org';
@@ -23,7 +23,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
   verified=false;r=await onRequest({request:request(),env});assert.equal(r.status,400);assert.equal(calls.length,1);
   verified=true;hostname='other.example';r=await onRequest({request:request(),env});assert.equal(r.status,400);
   hostname='example.org';calls=[];r=await onRequest({request:request({...values,to:'attacker@example.net'}),env});assert.equal(r.status,200);
-  const mail=JSON.parse(calls[1].options.body);assert.deepEqual(mail.to,[env.CONTACT_TO]);assert.equal(mail.reply_to,values.email);assert.equal(mail.from,env.CONTACT_FROM);assert.ok(!('html' in mail));
+  const mail=calls[1].options.body;assert.ok(mail instanceof FormData);assert.equal(mail.get('to'),env.CONTACT_TO);assert.equal(mail.get('h:Reply-To'),values.email);assert.equal(mail.get('from'),env.CONTACT_FROM);assert.equal(mail.get('text'),`Name: ${values.name}\nEmail: ${values.email}\n\n${values.message}`);assert.ok(!mail.has('html'));
+  assert.equal(calls[1].url,'https://api.mailgun.net/v3/mg.example.org/messages');
+  assert.equal(calls[1].options.headers.Authorization,'Basic '+Buffer.from('api:test-secret').toString('base64'));
+  calls=[];r=await onRequest({request:request(),env:{...env,MAILGUN_REGION:'EU'}});assert.equal(r.status,200);assert.equal(calls[1].url,'https://api.eu.mailgun.net/v3/mg.example.org/messages');
+  for(const settings of [{MAILGUN_DOMAIN:'https://evil.example/path'},{MAILGUN_REGION:'invalid'},{MAILGUN_API_KEY:''}]){
+    calls=[];r=await onRequest({request:request(),env:{...env,...settings}});assert.equal(r.status,503);assert.equal(calls.length,0);
+  }
   mailOK=false;r=await onRequest({request:request(),env});assert.equal(r.status,502);assert.ok(!(await r.text()).includes('secret provider detail'));
   global.fetch=async()=>{throw Error('network');};r=await onRequest({request:request(),env});assert.equal(r.status,502);
   for(const file of ['public/contact.html','public/assets/contact.js'])assert.ok(!fs.readFileSync(file,'utf8').includes(env.CONTACT_TO));

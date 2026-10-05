@@ -1,8 +1,10 @@
-// Cloudflare Pages Function. All mail settings are server-side bindings.
+// Shared contact handler for Workers and Pages. Mail settings stay server-side.
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status, headers: {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
 });
-const configured = env => ['CONTACT_TO','CONTACT_FROM','RESEND_API_KEY','TURNSTILE_SITE_KEY','TURNSTILE_SECRET_KEY'].every(k => typeof env[k] === 'string' && env[k].trim());
+const configured = env => ['CONTACT_TO','CONTACT_FROM','MAILGUN_API_KEY','MAILGUN_DOMAIN','TURNSTILE_SITE_KEY','TURNSTILE_SECRET_KEY'].every(k => typeof env[k] === 'string' && env[k].trim())
+  && /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(env.MAILGUN_DOMAIN)
+  && ['US','EU'].includes((env.MAILGUN_REGION || 'US').toUpperCase());
 const error = (message, status) => json({ok:false,message},status);
 async function readBody(request) {
   const reader=request.body?.getReader();if(!reader)return '';
@@ -31,9 +33,16 @@ export async function onRequest({request,env}) {
     if(!verification.ok)return error('The spam check is unavailable. Please try again.',502);
     const checked=await verification.json();
     if(!checked.success||checked.hostname!==url.hostname||checked.action!=='contact')return error('The spam check expired or failed. Please try again.',400);
-    const sent=await fetch('https://api.resend.com/emails',{
-      method:'POST',headers:{'Authorization':`Bearer ${env.RESEND_API_KEY}`,'Content-Type':'application/json'},
-      body:JSON.stringify({from:env.CONTACT_FROM,to:[env.CONTACT_TO],reply_to:email,subject:`HPLC Simulator: ${subject}`,text:`Name: ${name}\nEmail: ${email}\n\n${message}`}),
+    const mail=new FormData();
+    mail.set('from',env.CONTACT_FROM);
+    mail.set('to',env.CONTACT_TO);
+    mail.set('h:Reply-To',email);
+    mail.set('subject',`HPLC Simulator: ${subject}`);
+    mail.set('text',`Name: ${name}\nEmail: ${email}\n\n${message}`);
+    const host=(env.MAILGUN_REGION || 'US').toUpperCase()==='EU'?'api.eu.mailgun.net':'api.mailgun.net';
+    const sent=await fetch(`https://${host}/v3/${encodeURIComponent(env.MAILGUN_DOMAIN)}/messages`,{
+      method:'POST',headers:{'Authorization':`Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`},
+      body:mail,
       signal:AbortSignal.timeout(8000)
     });
     if(!sent.ok)return error('The mail service could not accept your message. Please try again later.',502);

@@ -13,41 +13,32 @@ python -m http.server 8000 --directory public
 Open http://localhost:8000/. The applications run entirely in the browser.
 A plain static server cannot send contact messages.
 
-## Cloudflare Pages
+## Cloudflare Workers deployment
 
-Connect this repository to Cloudflare Pages with:
+Connect this repository to the `hplcsimulator-website` Worker with:
 
 - Production branch: `main`
-- Framework preset: None
 - Build command: `python build_site.py`
-- Build output directory: `public`
+- Deploy command: `npx wrangler deploy`
 - Root directory: repository root (leave blank)
 
-All build inputs are included. No old website backup, Java installation,
-Eclipse workspace, or Node package installation is needed for the site build.
-The sibling `functions/` directory contains the contact API; Git-based Pages
-builds deploy it with the static files. Do not upload only `public/` through the
-Cloudflare dashboard if the contact form is needed.
+`wrangler.jsonc` deploys `worker.js` and the `public` static assets together.
+The Worker handles `/api/contact`; all other requests use the static files.
+Custom domains are managed in the Cloudflare dashboard.
 
-After deployment, add `hplcsimulator.org` in the Pages project's Custom domains.
-This repository does not configure DNS or deploy itself automatically until it
-is connected to Cloudflare.
+All build inputs are included. No old website backup or Java installation is needed.
 
 ## Contact form configuration
 
-The form uses a Cloudflare Pages Function, Resend for email delivery, and
-Cloudflare Turnstile for spam protection. Add these bindings in Cloudflare:
+The form uses Mailgun for delivery and Cloudflare Turnstile for spam protection.
+Configure `CONTACT_TO`, `CONTACT_FROM`, `MAILGUN_DOMAIN`, `MAILGUN_REGION`,
+`MAILGUN_API_KEY`, `TURNSTILE_SITE_KEY`, and `TURNSTILE_SECRET_KEY` as Worker
+runtime bindings. Store the recipient, API key, and Turnstile secret as secrets.
+The form stays disabled until configuration is complete.
 
-- `CONTACT_TO` (secret): the destination email address.
-- `CONTACT_FROM`: a sender on your Resend-verified domain.
-- `RESEND_API_KEY` (secret): a sending API key.
-- `TURNSTILE_SITE_KEY`: the public key for the site's managed Turnstile widget.
-- `TURNSTILE_SECRET_KEY` (secret): its matching secret key.
-
-Configure production and preview environments separately and redeploy after
-changing settings. The form stays disabled when configuration is missing.
-No destination address or credentials are committed here. See
-[contact setup details](public/README.md#contact-form-on-cloudflare-pages).
+See [contact setup details](public/README.md#contact-form-on-cloudflare-workers)
+for the binding values and verification steps. No credentials or destination
+address are committed here.
 
 ## Files and editing
 
@@ -55,7 +46,8 @@ No destination address or credentials are committed here. See
 - `simulator/workspace.html`, `fluid/workspace.html`: application page templates.
 - `public/assets/`: JavaScript source, styles, data, and logos.
 - `public/downloads/`: teaching materials, Java examples, and historical source archives.
-- `functions/api/contact.js`: contact endpoint, deployed only on the server.
+- `worker.js`, `wrangler.jsonc`: Worker entry point and deployment configuration.
+- `functions/api/contact.js`: shared contact endpoint, deployed only on the server.
 - `tests/`: application reference fixtures and tests.
 
 Edit the templates or application assets, run the build, and commit the source
@@ -76,6 +68,7 @@ node tests/plot-interactions.cjs
 node tests/fluid-model.test.cjs
 node tests/fluid-flow.test.cjs
 node tests/contact.test.cjs
+node tests/worker.test.cjs
 ```
 
 Contact tests use mocked services and do not send email. Reference data are

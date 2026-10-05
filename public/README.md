@@ -1,6 +1,6 @@
 # HPLC Simulator website preview
 
-Open http://hplcsimulator/ using the existing local server, or open `index.html` directly in a browser. All seven pages, styles, illustrations, navigation, and downloads work without a build tool or internet connection. The contact form requires the Cloudflare Pages Function and mail configuration described below.
+Open http://hplcsimulator/ using the existing local server, or open `index.html` directly in a browser. All seven pages, styles, illustrations, navigation, and downloads work without a build tool or internet connection. The contact form requires the Cloudflare Worker and mail configuration described below.
 
 The website uses plain HTML, CSS, JavaScript, and inline SVG. No framework, package installation, remote fonts, analytics, PHP, or Java runtime is required.
 
@@ -20,47 +20,57 @@ Styles: `assets/site.css`. Navigation and resource filtering: `assets/site.js`. 
 
 Downloadable documents and historical archives are versioned in `downloads/`. Building the website does not require the original website backup or Eclipse projects.
 
-## Contact form on Cloudflare Pages
+## Contact form on Cloudflare Workers
 
-The contact page posts to `/api/contact`, implemented in `../functions/api/contact.js`.
-Deploy from the project root with `public` as the Pages output directory; the sibling
-`functions` directory must be deployed too. Static file serving alone cannot send mail.
-The build command is `python build_site.py`. All required assets and downloads are included.
+The contact page posts to `/api/contact`. `../worker.js` routes it to the shared
+handler in `../functions/api/contact.js`; other requests use the static assets.
+`../wrangler.jsonc` deploys the Worker and the `public` assets together.
 
-The mail transport is Resend. Create a Resend account, verify a sender domain you
-control, and create a sending API key. Configure these bindings in Cloudflare Pages
-under Settings → Variables and Secrets for the deployment environment:
+In the connected Worker's build settings, use `python build_site.py` as the build
+command and `npx wrangler deploy` as the deploy command. Keep the repository root
+as the root directory. Domains are managed through the Cloudflare dashboard.
+
+The mail transport is Mailgun's HTTPS API. Use an existing verified sending domain
+and a domain sending API key. Add these runtime bindings in the Worker's
+Settings > Variables and Secrets (not the build environment variables):
 
 | Binding | Value |
 | --- | --- |
-| `CONTACT_TO` (secret) | The Gmail destination specified by the site owner |
-| `CONTACT_FROM` | A sender at your verified domain, such as `HPLC Simulator <contact@example.org>` |
-| `RESEND_API_KEY` (secret) | Resend sending API key |
+| `CONTACT_TO` (secret) | The destination email address specified by the site owner |
+| `CONTACT_FROM` | A sender at your Mailgun domain, such as `HPLC Simulator <contact@mg.example.org>` |
+| `MAILGUN_DOMAIN` | Verified Mailgun sending domain, without https:// or a path |
+| `MAILGUN_REGION` | `US` or `EU`, matching the domain's region; defaults to US |
+| `MAILGUN_API_KEY` (secret) | Mailgun domain sending API key (not an SMTP password) |
 | `TURNSTILE_SITE_KEY` | Public site key from a Cloudflare Turnstile managed widget |
 | `TURNSTILE_SECRET_KEY` (secret) | Matching Turnstile secret key |
 
-Add your deployed hostname to the Turnstile widget's allowed hostnames. Configure
-production and preview separately; leave mail settings unset on public previews
-unless those previews should send real mail. Redeploy after configuring bindings.
-Do not use your Gmail address as `CONTACT_FROM`: the sender must be verified with
-Resend. Replies to contact messages go to the visitor's email address.
+Create a managed Turnstile widget and allow `hplcsimulator.org` and
+`www.hplcsimulator.org`. Add the workers.dev hostname too if testing there.
+Save and deploy the runtime settings. The form stays disabled until all required
+bindings are set. Do not commit credentials or place them inside `public`.
+
+The From address uses your Mailgun sending domain; replies go to the visitor's
+email address. If using a Mailgun sandbox domain, the destination must be an
+authorized sandbox recipient. Production should use a verified custom domain.
 
 The recipient is never returned by the endpoint or included in page HTML or
 browser JavaScript. The form has a honeypot, input/size validation, same-origin
 submission checks, and server-side Turnstile verification. Messages are sent as
-plain text. Add a Cloudflare rate-limit rule for POST `/api/contact` if needed for
-traffic volume. The function does not log message bodies or credentials.
+plain text. The handler does not log message bodies or credentials.
 
-For local function testing, use `npx wrangler pages dev public` from the repository
-root. Bindings can go in a root `.dev.vars` file (ignored by Git). Never put that file
-inside `public`. Use Turnstile's official local testing keys only in development.
-The current plain static local server displays the form but cannot send messages.
+For local testing, use `npx wrangler dev` from the repository root. Bindings can
+go in a root `.dev.vars` file (ignored by Git). Use Turnstile's official local
+testing keys only in development. A plain static server cannot send messages.
 
-Run `node tests/contact.test.cjs` for mocked validation and delivery tests. These
-tests do not send email. After deployment, submit one test message and verify receipt
-and reply behavior; API acceptance is not a guarantee of inbox delivery.
+Run `node tests/contact.test.cjs` and `node tests/worker.test.cjs` for mocked
+validation, delivery, and routing tests. These do not send email. After deployment,
+submit a test message and verify receipt and reply behavior; API acceptance is
+not a guarantee of inbox delivery.
 
-References: [Pages Functions](https://developers.cloudflare.com/pages/functions/get-started/),
-[Pages secrets](https://developers.cloudflare.com/pages/functions/bindings/),
+For Pages deployments, the shared `functions/api/contact.js` handler still works
+with `public` as the output directory and the same runtime bindings.
+
+References: [Worker static assets](https://developers.cloudflare.com/workers/static-assets/),
+[Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
 [Turnstile validation](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/),
-[Resend send API](https://resend.com/docs/api-reference/emails/send-email).
+[Mailgun sending API](https://documentation.mailgun.com/docs/mailgun/user-manual/sending-messages/send-http).
