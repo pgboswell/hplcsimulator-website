@@ -1,0 +1,10 @@
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+.wrangler/
+node_modules/
+__pycache__/
+*.pyc
+*.class
+preview/

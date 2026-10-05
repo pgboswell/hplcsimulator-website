@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),M=require('../public/assets/fluid/model.js'),G=require('../public/assets/fluid/geometry.js');
+const pump=G.alignPorts(M.createPart('pump','p')),waste=G.alignPorts(M.createPart('waste','w'));
+const tube={id:'t',from:{part:'p',port:0},to:{part:'w',port:0},bends:[],length:10,diameter:5};
+const layout={parts:[pump,waste],tubes:[tube]};
+assert.equal(M.calculate(layout).directions.t,1);
+[tube.from,tube.to]=[tube.to,tube.from];assert.equal(M.calculate(layout).directions.t,-1);
+layout.parts[1]=G.alignPorts(M.createPart('pump','w'));assert.deepEqual(M.calculate(layout).directions,{});
+layout.parts[1]=G.alignPorts(M.createPart('valve','w',0,0,7,6));tube.from.port=1;
+assert.deepEqual(M.calculate(layout).directions,{});layout.parts[1].state=1;assert.equal(M.calculate(layout).directions.t,-1);
+layout.parts=[waste];layout.tubes=[];assert.deepEqual(M.calculate(layout).directions,{});
+console.log('PASS: forward/reverse flow, conflicting sources, blocked/open selector, and no source');
