@@ -46,6 +46,13 @@
 .metrics{border-bottom:0}
 
 .plot-cursor{position:absolute;width:1px;background:rgba(140,140,140,.45);pointer-events:none}.plot-cursor[hidden]{display:none}#chromatogram{cursor:grab}#chromatogram.is-panning{cursor:grabbing}
+.plot-slot{display:flow-root;min-width:0;overflow:visible}
+@media(max-width:550px){
+  .plot-wrap.is-mobile-docked{position:fixed;top:0;left:0;right:0;margin:0;padding:6px 8px 0;background:#fff;border-bottom:1px solid #cbd2e5;box-shadow:0 4px 14px #15176320;z-index:60}
+  .plot-wrap.is-mobile-docked canvas{height:clamp(160px,27vh,230px)}
+  .sim-controls,.sim-sample,html.mobile-plot-docked :is(input,select,button,summary){scroll-margin-top:calc(clamp(160px,27vh,230px) + 18px)}
+}
+@media print{.plot-slot{height:auto!important}.plot-wrap.is-mobile-docked{position:relative!important;box-shadow:none}}
 /* Contextual help stays small beside labels; the popover uses the browser top layer. */
 #sim-app .help-button,#custom-form .help-button{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;flex:0 0 24px;width:24px;min-width:24px;height:24px;min-height:24px;padding:0;margin:0 0 0 5px;border:1px solid #9aa3bd;border-radius:50%;background:transparent;color:#596582;font:600 14px/1 "Segoe UI",sans-serif;cursor:pointer}
 #sim-app .help-button:hover,#custom-form .help-button:hover{background:#e8ecf8;color:#151763}

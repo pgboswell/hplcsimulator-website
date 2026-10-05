@@ -167,13 +167,15 @@ function draw() {
   min-=(max-min)*0.025;
   if(lockedY)[min,max]=lockedY;
   ctx.font='14px Segoe UI, sans-serif';
+  const compactAxes=w<520,axisTitleInset=compactAxes?8:12,tickGap=compactAxes?6:8;
   const tickWidth=Math.max(...Array.from({length:5},(_,i)=>ctx.measureText(num(max-(max-min)*i/4,2)).width));
   const auxTimes=hasOverlay?Array.from({length:301},(_,i)=>start+(end-start)*i/300):[];
   const auxValues=auxTimes.map(t=>M.auxiliary(result,t,overlay,selected));
   const auxMax=Math.max(overlay==='composition'?100:0.01,...auxValues)*(overlay==='composition'?1:1.05);
   const auxLabels=Array.from({length:5},(_,i)=>num(auxMax*(1-i/4),2));
-  const rightMargin=hasOverlay?Math.max(72,Math.ceil(Math.max(...auxLabels.map(label=>ctx.measureText(label).width)))+36):20;
-  const x0=Math.max(72,Math.ceil(tickWidth)+36),y0=26,pw=Math.max(50,w-x0-rightMargin),ph=h-65;
+  const axisPadding=compactAxes?24:36,minAxisMargin=compactAxes?46:72;
+  const rightMargin=hasOverlay?Math.max(minAxisMargin,Math.ceil(Math.max(...auxLabels.map(label=>ctx.measureText(label).width)))+axisPadding):(compactAxes?12:20);
+  const x0=Math.max(minAxisMargin,Math.ceil(tickWidth)+axisPadding),y0=26,pw=Math.max(50,w-x0-rightMargin),ph=h-65;
   const visiblePeaks=result.peaks.filter(p=>p.retention!==null&&p.retention>=start&&p.retention<=end&&p.height>0)
     .map(p=>({index:p.index,x:x0+(p.retention-start)/(end-start)*pw,
       value:M.detectorAt(result,p.retention)})).sort((a,b)=>a.x-b.x);
@@ -196,7 +198,7 @@ function draw() {
   for(let i=0;i<=4;i++){
     const py=y0+ph*i/4,v=max-(max-min)*i/4;
     ctx.strokeStyle='#e6eaf4';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,py);ctx.lineTo(x0+pw,py);ctx.stroke();
-    ctx.fillStyle='#62718d';ctx.textAlign='right';ctx.fillText(num(v,2),x0-8,py);
+    ctx.fillStyle='#62718d';ctx.textAlign='right';ctx.fillText(num(v,2),x0-tickGap,py);
   }
   const ticks=w<420?4:6;
   for(let i=0;i<=ticks;i++){
@@ -204,7 +206,7 @@ function draw() {
     ctx.fillStyle='#62718d';ctx.textAlign='center';ctx.fillText(num((start+(end-start)*i/ticks)/60,2),px,y0+ph+17);
   }
   ctx.fillStyle='#4e5b7d';ctx.textAlign='center';
-  ctx.save();ctx.translate(12,y0+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Concentration (µM)',0,0);ctx.restore();
+  ctx.save();ctx.translate(axisTitleInset,y0+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Concentration (µM)',0,0);ctx.restore();
   ctx.fillText('Time (min)',x0+pw/2,h-5);
   ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,ph);ctx.clip();
   function line(ts,vs,color,width=1.5,dash=[]) {ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ts.forEach((t,i)=>i?ctx.lineTo(x(t),y(vs[i])):ctx.moveTo(x(t),y(vs[i])));ctx.stroke();ctx.setLineDash([]);}
@@ -223,8 +225,8 @@ function draw() {
   if(hasOverlay) {
     const ts=auxTimes,vs=auxValues;
     ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,ph);ctx.clip();ctx.strokeStyle='#6c84ae';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);ctx.beginPath();ts.forEach((t,i)=>{const yy=y0+ph-vs[i]/auxMax*ph;i?ctx.lineTo(x(t),yy):ctx.moveTo(x(t),yy);});ctx.stroke();ctx.restore();
-    ctx.fillStyle='#627ba4';ctx.textAlign='left';for(let i=0;i<=4;i++)ctx.fillText(auxLabels[i],x0+pw+7,y0+ph*i/4);
-    ctx.save();ctx.translate(w-12,y0+ph/2);ctx.rotate(Math.PI/2);ctx.textAlign='center';
+    ctx.fillStyle='#627ba4';ctx.textAlign='left';for(let i=0;i<=4;i++)ctx.fillText(auxLabels[i],x0+pw+(compactAxes?6:7),y0+ph*i/4);
+    ctx.save();ctx.translate(w-axisTitleInset,y0+ph/2);ctx.rotate(Math.PI/2);ctx.textAlign='center';
     ctx.fillText($('overlay').selectedOptions[0].textContent,0,0);ctx.restore();
   }
   ctx.save();ctx.font='600 14px Segoe UI, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
@@ -317,6 +319,26 @@ plot.addEventListener('click',event=>{
   const peak=result.sorted.reduce((a,p)=>Math.abs(p.retention-t)<Math.abs(a.retention-t)?p:a);selected=peak.index;compareResolution=false;updateSelection();draw();
 });
 new ResizeObserver(()=>draw()).observe($('chromatogram'));
+// Keep the same live canvas visible above the controls on small screens.
+// Its original slot retains its height, so docking never shifts the page.
+const plotSlot=$('plot-slot'),plotWrap=plot.parentElement,mobilePlot=matchMedia('(max-width:550px)');
+let plotDocked=false,dockFrame=0;
+function updatePlotDock(){
+  dockFrame=0;
+  const dock=mobilePlot.matches&&plotSlot.getBoundingClientRect().top<0&&$('sim-app').getBoundingClientRect().bottom>260;
+  if(dock===plotDocked)return;
+  if(dock)plotSlot.style.height=`${plotSlot.getBoundingClientRect().height}px`;
+  plotDocked=dock;
+  plotWrap.classList.toggle('is-mobile-docked',dock);
+  document.documentElement.classList.toggle('mobile-plot-docked',dock);
+  if(!dock)plotSlot.style.height='';
+  hideCursor();
+}
+function schedulePlotDock(){if(!dockFrame)dockFrame=requestAnimationFrame(updatePlotDock);}
+window.addEventListener('scroll',schedulePlotDock,{passive:true});
+window.addEventListener('resize',schedulePlotDock,{passive:true});
+mobilePlot.addEventListener('change',schedulePlotDock);
+schedulePlotDock();
 function download(data,name,type) {
   const blob=data instanceof Blob?data:new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
