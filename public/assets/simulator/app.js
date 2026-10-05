@@ -152,13 +152,39 @@ function groupedPeakCallouts(peaks,left,right,measure){
     const labelX=Math.max(left+width/2,Math.min(right-width/2,anchor.x));
     return {...anchor,members,lines,width,labelX,rows:lines.length};
   }
-  const groups=peaks.slice().sort((a,b)=>a.x-b.x).map(p=>describe([p]));
-  // Merge neighboring text boxes until all numbers fit without overlapping.
-  for(let i=0;i<groups.length-1;){
-    const a=groups[i],b=groups[i+1];
-    if(a.labelX+a.width/2+8>b.labelX-b.width/2){
-      groups.splice(i,2,describe([...a.members,...b.members]));i=Math.max(0,i-1);
-    }else i++;
+  // Only combine centers that occupy essentially the same screen position.
+  // Label width must never decide whether two peaks are distinguishable.
+  const clusters=[];
+  for(const peak of peaks.slice().sort((a,b)=>a.x-b.x)){
+    const previous=clusters.at(-1);
+    if(previous&&peak.x-previous[0].x<=2)previous.push(peak);
+    else clusters.push([peak]);
+  }
+  const groups=clusters.map(describe),rows=[[]];
+  let used=0;
+  for(const group of groups){
+    if(rows.at(-1).length&&used+8+group.width>available){rows.push([]);used=0;}
+    group.row=rows.length-1;
+    rows.at(-1).push(group);used+=(used?8:0)+group.width;
+  }
+  // Spread distinct labels without merging their compound numbers.
+  for(const row of rows){
+    const blocks=[];let offset=0;
+    for(let i=0;i<row.length;i++){
+      if(i)offset+=(row[i-1].width+row[i].width)/2+8;
+      row[i].offset=offset;
+      blocks.push({sum:row[i].x-offset,count:1});
+      while(blocks.length>1){
+        const a=blocks.at(-2),b=blocks.at(-1);
+        if(a.sum/a.count<=b.sum/b.count)break;
+        blocks.splice(-2,2,{sum:a.sum+b.sum,count:a.count+b.count});
+      }
+    }
+    let i=0;
+    for(const block of blocks){
+      const base=Math.max(left+row[0].width/2,Math.min(right-row.at(-1).width/2-offset,block.sum/block.count));
+      for(let j=0;j<block.count;j++,i++)row[i].labelX=base+row[i].offset;
+    }
   }
   return groups;
 }
@@ -204,7 +230,7 @@ function draw() {
     let overflow=0;
     for(const c of callouts){
       const peakY=y0+ph-(c.value-min)/(max-min)*ph;
-      const needed=26+Math.abs(c.labelX-c.x)+(c.rows-1)*20;
+      const needed=26+Math.abs(c.labelX-c.x)+(c.rows-1+c.row)*20;
       overflow=Math.max(overflow,y0+10+needed-peakY);
     }
     if(overflow<0.1)break;
@@ -255,7 +281,7 @@ function draw() {
   for(const c of callouts){
     if(c.value<min||c.value>max)continue;
     const peakY=y(c.value),diagonal=Math.abs(c.labelX-c.x);
-    const labelY=Math.max(y0+8,peakY-26-diagonal-(c.rows-1)*18);
+    const labelY=Math.max(y0+8+c.row*18,peakY-26-diagonal-(c.rows-1)*18);
     const labelBottom=labelY+(c.rows-1)*18+9;
     const elbowY=peakY-7;
     const isSelected=c.members.some(p=>p.index===selected);

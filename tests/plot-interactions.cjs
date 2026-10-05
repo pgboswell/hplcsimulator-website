@@ -42,7 +42,7 @@ vm.runInContext(source.slice(source.indexOf('function groupedPeakCallouts('),sou
 for(const count of [1,9,43,100]){
   ctx.labelPeaks=Array.from({length:count},(_,i)=>({index:i,x:100+i*0.01,value:i+1}));
   const labels=vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx);
-  const numbers=labels.flatMap(p=>Array.from(p.lines).flatMap(line=>line.split(',').map(Number))).sort((a,b)=>a-b);
+  const numbers=Array.from(labels).flatMap(p=>Array.from(p.lines).flatMap(line=>line.split(',').map(Number))).sort((a,b)=>a-b);
   assert.deepEqual(numbers,Array.from({length:count},(_,i)=>i+1));
   for(const label of labels){assert(label.labelX-label.width/2>=72);assert(label.labelX+label.width/2<=240);}
   for(let i=1;i<labels.length;i++)assert(labels[i-1].labelX+labels[i-1].width/2+8<=labels[i].labelX-labels[i].width/2);
@@ -50,6 +50,12 @@ for(const count of [1,9,43,100]){
 ctx.labelPeaks=[{index:0,x:100,value:1},{index:1,x:160,value:1},{index:2,x:220,value:1}];
 const isolated=vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx);
 assert.equal(isolated.length,3);for(const label of isolated)assert.equal(label.labelX,label.x);
+ctx.labelPeaks=[{index:0,x:100,value:1},{index:1,x:105,value:1},{index:2,x:110,value:1}];
+const distinct=vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx);
+assert.equal(distinct.length,3,'Visible peaks must not merge just because their labels overlap');
+for(let i=1;i<distinct.length;i++)assert(distinct[i].labelX-distinct[i-1].labelX>=15);
+ctx.labelPeaks=[{index:0,x:100,value:1},{index:1,x:102,value:1},{index:2,x:104,value:1}];
+assert.equal(vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx).length,2,'Groups must not chain across distinguishable positions');
 console.log('Passed: grouped labels retain every compound number, fit the plot, and separate again when peaks spread out.');
 
 vm.runInContext(source.slice(source.indexOf('function detectorWindow('),source.indexOf('function concentrationAxis(')),ctx);
@@ -60,3 +66,4 @@ assert.deepEqual(Array.from(windowData.values),ctx.sampled.detector.values.slice
 const narrow=vm.runInContext('detectorWindow(sampled,30.2,30.3)',ctx);
 assert.deepEqual(Array.from(narrow.times),[30,31]);
 console.log('Passed: zoom windows reuse stored samples, including bracketing points at high zoom.');
+
