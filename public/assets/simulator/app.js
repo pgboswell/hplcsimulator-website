@@ -151,6 +151,15 @@ function peakCallouts(peaks,left,right){
   }
   return labels;
 }
+function concentrationAxis(min,max){
+  const magnitude=Math.max(Math.abs(min),Math.abs(max));
+  const units=[['fM',1e-9],['pM',1e-6],['nM',1e-3],['µM',1],['mM',1e3],['M',1e6]];
+  let unit=units[0];
+  for(const candidate of units){if(Number(magnitude.toPrecision(3))>=candidate[1])unit=candidate;}
+  if(magnitude===0)unit=units[3];
+  return {unit:unit[0],scale:unit[1]};
+}
+function axisTick(value){return String(Number(value.toPrecision(3)));}
 function draw() {
   if(!result)return;
   const canvas=$('chromatogram'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(window.devicePixelRatio||1,3);
@@ -166,13 +175,19 @@ function draw() {
   if(max===min)max=min+0.05;
   min-=(max-min)*0.025;
   if(lockedY)[min,max]=lockedY;
+  const labelCeiling=lockedY?max:min+(max-min)*1.3;
+  // Size the axis for the largest permitted label headroom, never the labels themselves.
+  let axis=concentrationAxis(min,max);
   ctx.font='14px Segoe UI, sans-serif';
   const compactAxes=w<520,axisTitleInset=compactAxes?8:12,tickGap=compactAxes?6:8;
-  const tickWidth=Math.max(...Array.from({length:5},(_,i)=>ctx.measureText(num(max-(max-min)*i/4,2)).width));
+  const tickWidth=Math.max(...[max,labelCeiling].flatMap(upper=>{
+    const unit=concentrationAxis(min,upper);
+    return Array.from({length:5},(_,i)=>ctx.measureText(axisTick((upper-(upper-min)*i/4)/unit.scale)).width);
+  }));
   const auxTimes=hasOverlay?Array.from({length:301},(_,i)=>start+(end-start)*i/300):[];
   const auxValues=auxTimes.map(t=>M.auxiliary(result,t,overlay,selected));
   const auxMax=Math.max(overlay==='composition'?100:0.01,...auxValues)*(overlay==='composition'?1:1.05);
-  const auxLabels=Array.from({length:5},(_,i)=>num(auxMax*(1-i/4),2));
+  const auxLabels=Array.from({length:5},(_,i)=>axisTick(auxMax*(1-i/4)));
   const axisPadding=compactAxes?24:36,minAxisMargin=compactAxes?46:72;
   const rightMargin=hasOverlay?Math.max(minAxisMargin,Math.ceil(Math.max(...auxLabels.map(label=>ctx.measureText(label).width)))+axisPadding):(compactAxes?12:20);
   const x0=Math.max(minAxisMargin,Math.ceil(tickWidth)+axisPadding),y0=26,pw=Math.max(50,w-x0-rightMargin),ph=h-65;
@@ -189,16 +204,19 @@ function draw() {
       overflow=Math.max(overflow,y0+10+needed-peakY);
     }
     if(overflow<0.1)break;
-    max=min+(max-min)*Math.min(2,ph/Math.max(ph/2,ph-overflow-1));
+    const next=Math.min(labelCeiling,min+(max-min)*Math.min(2,ph/Math.max(ph/2,ph-overflow-1)));
+    if(next===max)break;
+    max=next;
   }
   if(lockedY)[min,max]=lockedY;
+  axis=concentrationAxis(min,max);
   const x=t=>x0+(t-start)/(end-start)*pw,y=v=>y0+ph-(v-min)/(max-min)*ph;
   plotGeometry={x0,y0,pw,ph,start,end,w,min,max};
   ctx.font='14px Segoe UI, sans-serif';ctx.textBaseline='middle';
   for(let i=0;i<=4;i++){
     const py=y0+ph*i/4,v=max-(max-min)*i/4;
     ctx.strokeStyle='#e6eaf4';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,py);ctx.lineTo(x0+pw,py);ctx.stroke();
-    ctx.fillStyle='#62718d';ctx.textAlign='right';ctx.fillText(num(v,2),x0-tickGap,py);
+    ctx.fillStyle='#62718d';ctx.textAlign='right';ctx.fillText(axisTick(v/axis.scale),x0-tickGap,py);
   }
   const ticks=w<420?4:6;
   for(let i=0;i<=ticks;i++){
@@ -206,7 +224,7 @@ function draw() {
     ctx.fillStyle='#62718d';ctx.textAlign='center';ctx.fillText(num((start+(end-start)*i/ticks)/60,2),px,y0+ph+17);
   }
   ctx.fillStyle='#4e5b7d';ctx.textAlign='center';
-  ctx.save();ctx.translate(axisTitleInset,y0+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Concentration (µM)',0,0);ctx.restore();
+  ctx.save();ctx.translate(axisTitleInset,y0+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(`Concentration (${axis.unit})`,0,0);ctx.restore();
   ctx.fillText('Time (min)',x0+pw/2,h-5);
   ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,ph);ctx.clip();
   function line(ts,vs,color,width=1.5,dash=[]) {ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ts.forEach((t,i)=>i?ctx.lineTo(x(t),y(vs[i])):ctx.moveTo(x(t),y(vs[i])));ctx.stroke();ctx.setLineDash([]);}
@@ -235,6 +253,8 @@ function draw() {
     const peakY=y(c.value),diagonal=Math.abs(c.labelX-c.x);
     const labelY=c.rows>1?y0+10+c.row*20:peakY-26-diagonal;
     const elbowY=peakY-7;
+    // Crowded callouts can reappear when zoomed; never flatten the signal to fit them.
+    if(labelY<y0+8||elbowY-diagonal<labelY+9)continue;
     ctx.strokeStyle=c.index===selected?'#d32f2f':'#778098';ctx.lineWidth=1;ctx.setLineDash([]);
     ctx.beginPath();ctx.moveTo(c.x,peakY-2);ctx.lineTo(c.x,elbowY);
     ctx.lineTo(c.labelX,elbowY-diagonal);ctx.lineTo(c.labelX,labelY+9);ctx.stroke();

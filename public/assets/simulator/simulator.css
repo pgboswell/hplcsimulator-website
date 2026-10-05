@@ -48,9 +48,9 @@
 .plot-cursor{position:absolute;width:1px;background:rgba(140,140,140,.45);pointer-events:none}.plot-cursor[hidden]{display:none}#chromatogram{cursor:grab}#chromatogram.is-panning{cursor:grabbing}
 .plot-slot{display:flow-root;min-width:0;overflow:visible}
 @media(max-width:550px){
-  .plot-wrap.is-mobile-docked{position:fixed;top:0;left:0;right:0;margin:0;padding:6px 8px 0;background:#fff;border-bottom:1px solid #cbd2e5;box-shadow:0 4px 14px #15176320;z-index:60}
+  .plot-wrap.is-mobile-docked{position:fixed;top:0;left:0;right:0;margin:0;padding:6px 8px 12px;background:#fff;border-bottom:1px solid #cbd2e5;box-shadow:0 4px 14px #15176320;z-index:60}
   .plot-wrap.is-mobile-docked canvas{height:clamp(160px,27vh,230px)}
-  .sim-controls,.sim-sample,html.mobile-plot-docked :is(input,select,button,summary){scroll-margin-top:calc(clamp(160px,27vh,230px) + 18px)}
+  .sim-controls,.sim-sample,html.mobile-plot-docked :is(input,select,button,summary){scroll-margin-top:calc(clamp(160px,27vh,230px) + 30px)}
 }
 @media print{.plot-slot{height:auto!important}.plot-wrap.is-mobile-docked{position:relative!important;box-shadow:none}}
 /* Contextual help stays small beside labels; the popover uses the browser top layer. */
