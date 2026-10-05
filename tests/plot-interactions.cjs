@@ -38,25 +38,21 @@ for(let time=46;time<=54;time+=0.1){
 assert.equal(names.filter((name,i)=>i&&name!==names[i-1]).length,1);
 assert.equal(names[0],'ketoprofen');assert.equal(names.at(-1),'propiophenone');
 console.log('Passed: overlapping peaks switch tooltip identity exactly once from left to right.');
-vm.runInContext(source.slice(source.indexOf('function peakCallouts('),source.indexOf('function draw()')),ctx);
+vm.runInContext(source.slice(source.indexOf('function groupedPeakCallouts('),source.indexOf('function axisTick(')),ctx);
 for(const count of [1,9,43,100]){
-  ctx.labelPeaks=Array.from({length:count},(_,i)=>({index:i,x:100+i*0.01}));
-  const labels=vm.runInContext('peakCallouts(labelPeaks,72,240)',ctx);
-  assert.equal(labels.length,count);
-  for(const label of labels)assert(label.labelX>=72&&label.labelX<=240);
-  for(const row of new Set(labels.map(p=>p.row))){
-    const xs=labels.filter(p=>p.row===row).map(p=>p.labelX);
-    for(let i=1;i<xs.length;i++)assert(xs[i]-xs[i-1]>=24-1e-8);
-  }
+  ctx.labelPeaks=Array.from({length:count},(_,i)=>({index:i,x:100+i*0.01,value:i+1}));
+  const labels=vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx);
+  const numbers=labels.flatMap(p=>Array.from(p.lines).flatMap(line=>line.split(',').map(Number))).sort((a,b)=>a-b);
+  assert.deepEqual(numbers,Array.from({length:count},(_,i)=>i+1));
+  for(const label of labels){assert(label.labelX-label.width/2>=72);assert(label.labelX+label.width/2<=240);}
+  for(let i=1;i<labels.length;i++)assert(labels[i-1].labelX+labels[i-1].width/2+8<=labels[i].labelX-labels[i].width/2);
 }
-console.log('Passed: peak callouts stay within plot bounds and separate crowded numbers.');
+ctx.labelPeaks=[{index:0,x:100,value:1},{index:1,x:160,value:1},{index:2,x:220,value:1}];
+const isolated=vm.runInContext('groupedPeakCallouts(labelPeaks,72,240,text=>text.length*7)',ctx);
+assert.equal(isolated.length,3);for(const label of isolated)assert.equal(label.labelX,label.x);
+console.log('Passed: grouped labels retain every compound number, fit the plot, and separate again when peaks spread out.');
 
-ctx.labelPeaks=[{index:0,x:100},{index:1,x:160},{index:2,x:220}];
-const isolated=vm.runInContext('peakCallouts(labelPeaks,72,240)',ctx);
-for(const label of isolated)assert.equal(label.labelX,label.x);
-console.log('Passed: isolated peak labels stay directly above their peaks.');
-
-vm.runInContext(source.slice(source.indexOf('function detectorWindow('),source.indexOf('// Spread labels')),ctx);
+vm.runInContext(source.slice(source.indexOf('function detectorWindow('),source.indexOf('function concentrationAxis(')),ctx);
 ctx.sampled={end:100,detector:{times:Array.from({length:101},(_,i)=>i),values:Array.from({length:101},(_,i)=>Math.sin(i))}};
 const windowData=vm.runInContext('detectorWindow(sampled,30.2,35.7)',ctx);
 assert.deepEqual(Array.from(windowData.times),[30,31,32,33,34,35,36]);

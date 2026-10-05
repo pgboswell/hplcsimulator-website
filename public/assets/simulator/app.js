@@ -129,28 +129,6 @@ function detectorWindow(r,start,end){
   const last=Math.min(n-1,Math.ceil(end/r.end*(n-1)));
   return {times:times.slice(first,last+1),values:values.slice(first,last+1)};
 }
-// Spread labels in retention order while keeping isolated labels near their peaks.
-function peakCallouts(peaks,left,right){
-  const gap=24,capacity=Math.max(1,Math.floor((right-left)/gap)+1);
-  const rows=Math.ceil(peaks.length/capacity),labels=[];
-  for(let row=0;row<rows;row++){
-    const group=peaks.filter((_,i)=>i%rows===row),blocks=[];
-    group.forEach((peak,i)=>{
-      blocks.push({sum:peak.x-i*gap,count:1});
-      while(blocks.length>1){
-        const b=blocks.at(-1),a=blocks.at(-2);
-        if(a.sum/a.count<=b.sum/b.count)break;
-        blocks.splice(-2,2,{sum:a.sum+b.sum,count:a.count+b.count});
-      }
-    });
-    let i=0;
-    for(const block of blocks){
-      const base=Math.max(left,Math.min(right-(group.length-1)*gap,block.sum/block.count));
-      for(let j=0;j<block.count;j++,i++)labels.push({...group[i],labelX:base+i*gap,row,rows});
-    }
-  }
-  return labels;
-}
 function concentrationAxis(min,max){
   const magnitude=Math.max(Math.abs(min),Math.abs(max));
   const units=[['fM',1e-9],['pM',1e-6],['nM',1e-3],['µM',1],['mM',1e3],['M',1e6]];
@@ -158,6 +136,31 @@ function concentrationAxis(min,max){
   for(const candidate of units){if(Number(magnitude.toPrecision(3))>=candidate[1])unit=candidate;}
   if(magnitude===0)unit=units[3];
   return {unit:unit[0],scale:unit[1]};
+}
+function groupedPeakCallouts(peaks,left,right,measure){
+  const available=Math.max(20,right-left);
+  function describe(members){
+    const anchor=members.reduce((a,b)=>a.value>=b.value?a:b);
+    const numbers=members.map(p=>p.index+1).sort((a,b)=>a-b),lines=[];
+    let line='';
+    for(const number of numbers){
+      const next=line?`${line},${number}`:String(number);
+      if(line&&measure(next)>available){lines.push(line);line=String(number);}else line=next;
+    }
+    if(line)lines.push(line);
+    const width=Math.max(...lines.map(measure));
+    const labelX=Math.max(left+width/2,Math.min(right-width/2,anchor.x));
+    return {...anchor,members,lines,width,labelX,rows:lines.length};
+  }
+  const groups=peaks.slice().sort((a,b)=>a.x-b.x).map(p=>describe([p]));
+  // Merge neighboring text boxes until all numbers fit without overlapping.
+  for(let i=0;i<groups.length-1;){
+    const a=groups[i],b=groups[i+1];
+    if(a.labelX+a.width/2+8>b.labelX-b.width/2){
+      groups.splice(i,2,describe([...a.members,...b.members]));i=Math.max(0,i-1);
+    }else i++;
+  }
+  return groups;
 }
 function axisTick(value){return String(Number(value.toPrecision(3)));}
 function draw() {
@@ -194,7 +197,8 @@ function draw() {
   const visiblePeaks=result.peaks.filter(p=>p.retention!==null&&p.retention>=start&&p.retention<=end&&p.height>0)
     .map(p=>({index:p.index,x:x0+(p.retention-start)/(end-start)*pw,
       value:M.detectorAt(result,p.retention)})).sort((a,b)=>a.x-b.x);
-  const callouts=$('show-peak-labels').checked?peakCallouts(visiblePeaks,x0+12,x0+pw-12):[];
+  ctx.font='600 14px Segoe UI, sans-serif';
+  const callouts=$('show-peak-labels').checked?groupedPeakCallouts(visiblePeaks,x0+4,x0+pw-4,text=>ctx.measureText(text).width):[];
   // Leave enough headroom for all three leader segments and their numbers.
   for(let pass=0;!lockedY&&pass<12;pass++){
     let overflow=0;
@@ -251,14 +255,15 @@ function draw() {
   for(const c of callouts){
     if(c.value<min||c.value>max)continue;
     const peakY=y(c.value),diagonal=Math.abs(c.labelX-c.x);
-    const labelY=c.rows>1?y0+10+c.row*20:peakY-26-diagonal;
+    const labelY=Math.max(y0+8,peakY-26-diagonal-(c.rows-1)*18);
+    const labelBottom=labelY+(c.rows-1)*18+9;
     const elbowY=peakY-7;
-    // Crowded callouts can reappear when zoomed; never flatten the signal to fit them.
-    if(labelY<y0+8||elbowY-diagonal<labelY+9)continue;
-    ctx.strokeStyle=c.index===selected?'#d32f2f':'#778098';ctx.lineWidth=1;ctx.setLineDash([]);
+    const isSelected=c.members.some(p=>p.index===selected);
+    ctx.strokeStyle=isSelected?'#d32f2f':'#778098';ctx.lineWidth=1;ctx.setLineDash([]);
     ctx.beginPath();ctx.moveTo(c.x,peakY-2);ctx.lineTo(c.x,elbowY);
-    ctx.lineTo(c.labelX,elbowY-diagonal);ctx.lineTo(c.labelX,labelY+9);ctx.stroke();
-    ctx.fillStyle=c.index===selected?'#d32f2f':'#3c4665';ctx.fillText(String(c.index+1),c.labelX,labelY);
+    ctx.lineTo(c.labelX,Math.max(labelBottom,elbowY-diagonal));ctx.lineTo(c.labelX,labelBottom);ctx.stroke();
+    ctx.fillStyle=isSelected?'#d32f2f':'#3c4665';
+    c.lines.forEach((line,i)=>ctx.fillText(line,c.labelX,labelY+i*18));
   }
   ctx.restore();
   canvas.setAttribute('aria-label',`Chromatogram from ${num(start/60)} to ${num(end/60)} minutes, ${result.peaks.length} compounds. Selected: ${p?.name||'none'}. Detailed values are in the sample table.`);
