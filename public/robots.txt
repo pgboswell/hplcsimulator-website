@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hplcsimulator.org/sitemap.xml
