@@ -73,3 +73,5 @@
 @media(max-width:550px){.sim-notes .calculation-section{padding:12px}.sim-notes .model-equation{padding:10px;font-size:16px}}
 
 .model-citation{font-size:.8em;white-space:nowrap;margin-left:.3em}.model-citation a{padding:0 2px}.model-references{margin-top:28px}.model-references h3{font-size:21px}.model-references li{font-size:15px;line-height:1.7;margin:0 0 14px;padding-left:4px;overflow-wrap:anywhere;scroll-margin-top:24px}.model-references li:target{background:#eef1fa;outline:2px solid #c9d1ee;border-radius:4px}
+
+.gradient-figure{margin:24px 0}.gradient-diagrams{display:grid;grid-template-columns:1fr 1fr;gap:12px}.gradient-figure img{display:block;width:100%;height:auto}.gradient-chart-scroll{overflow-x:auto;margin-top:16px}.gradient-figure figcaption{font-size:14px;line-height:1.7;margin-top:14px}.gradient-figure figcaption strong{color:var(--ink)}@media(max-width:550px){.gradient-diagrams{grid-template-columns:1fr}.gradient-profile-chart{min-width:480px}}
