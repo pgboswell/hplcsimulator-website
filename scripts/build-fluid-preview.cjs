@@ -1,28 +1,30 @@
-// Regenerate the Home card using the visualizer's current symbol artwork.
+// Render the actual six-port example with the visualizer's artwork and routing.
+// Run: node scripts/build-fluid-preview.cjs
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const app=fs.readFileSync(path.join(root,'public/assets/fluid/app.js'),'utf8');
-const context=vm.createContext({window:{}});
-vm.runInContext(fs.readFileSync(path.join(root,'public/assets/fluid/pump-symbol.js'),'utf8'),context);
-vm.runInContext(app.slice(app.indexOf('  function columnSymbol('),app.indexOf('  const pumpTool=')),context);
-const pump=context.window.FluidPumpSymbol(60,90),column=context.columnSymbol(160),detector=context.detectorSymbol(120);
-const ports=Array.from({length:6},(_,i)=>{const a=(-90+i*60)*Math.PI/180;return [240+30*Math.cos(a),78+30*Math.sin(a)];});
-const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/>`;
-const svg=`<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HPLC flow path with a twin-piston pump, six-port injection valve, column with end fittings, and detector displaying chromatographic peaks" viewBox="0 0 620 175">
-<defs><pattern id="fluid-preview-grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r=".7" fill="#b8c2d5"/></pattern></defs>
-<rect width="620" height="175" fill="url(#fluid-preview-grid)"/>
-<g fill="none" stroke="#0072b2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-<path d="M90 118v8q0 8 8 8h73q8 0 8-8V56q0-8 8-8h53"/>
-<path d="M${ports[1]}H282q8 0 8 8v-1q0 8 8 8h22"/>
-<path d="M480 78h8q8 0 8 8q0 5 5 5h9"/>
-<path d="M240 108v12q0 8 8 8h26q8 0 8-8V101q0-8-8-8h-8"/>
-</g>
-<g transform="translate(30 28)"><rect x="2" y="2" width="116" height="86" rx="8" fill="#f4f6fd" stroke="#657398" stroke-width="2"/>${pump}</g>
-<circle cx="240" cy="78" r="39" fill="#f0f2fa" stroke="#657398" stroke-width="2"/>
-${[[0,1],[2,3],[4,5]].map(([a,b])=>`<path d="M${ports[a]}L${ports[b]}" stroke="${a===0?'#0072b2':'#f58220'}" stroke-width="7" stroke-linecap="round"/>`).join('')}
-<g transform="translate(320 48)">${column}</g>
-<g transform="translate(510 43) scale(.8)"><rect x="2" y="2" width="116" height="86" rx="8" fill="#f4f6fd" stroke="#657398" stroke-width="2"/>${detector}</g>
-${[[90,118],[320,78],[480,78],[510,91],...ports].map(([x,y])=>dot(x,y)).join('')}
-<g fill="#283451" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" text-anchor="middle"><text x="90" y="162">Pump</text><text x="240" y="162">Injection valve</text><text x="400" y="162">Column</text><text x="558" y="162">Detector</text></g></svg>`;
-fs.writeFileSync(path.join(root,'public/assets/fluid-preview.svg'),svg+'\n');
-console.log('Built fluid-preview.svg from current visualizer symbols.');
+const read=file=>fs.readFileSync(path.join(root,'public/assets/fluid',file),'utf8');
+const M=require('../public/assets/fluid/model.js'),G=require('../public/assets/fluid/geometry.js');
+const context=vm.createContext({window:{},M,G,selected:null,pending:null,$:()=>({checked:false}),
+  fmt:n=>String(Number(n.toPrecision(3))),esc:s=>String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')});
+vm.runInContext(read('examples.js')+read('pump-symbol.js'),context);
+context.layout=G.snapLayout(M.validate(JSON.parse(JSON.stringify(context.window.FluidExamples.find(e=>e.name==='6-port valve').layout))));
+context.calculation=M.calculate(context.layout);
+const app=read('app.js');
+vm.runInContext(`
+const part=id=>layout.parts.find(p=>p.id===id);
+const point=e=>{const p=part(e.part),v=p.ports[e.port];return [p.x+v[0],p.y+v[1]];};
+const same=(a,b)=>a&&b&&a.part===b.part&&a.port===b.port;
+`+app.slice(app.indexOf('  function columnSymbol('),app.indexOf('  const pumpTool='))
+ +app.slice(app.indexOf('  function route('),app.indexOf('  function viewbox('))
+ +app.slice(app.indexOf('  function partArtwork('),app.indexOf('  function draw(){')),context);
+// Reuse the tube, part, and connection-marker rendering; omit editor controls.
+const draw=app.slice(app.indexOf('    const colors=calculation.colors'),app.indexOf('    const t=tube(selected);'));
+let markup=vm.runInContext(`(()=>{${draw} return html;})()`,context);
+markup=markup.replace(/ role="button"| tabindex="0"/g,'');
+const points=context.layout.parts.flatMap(p=>[[p.x-25,p.y-20],[p.x+p.width+25,p.y+p.height+45]])
+  .concat(context.layout.tubes.flatMap(t=>t.bends));
+const left=Math.min(...points.map(p=>p[0])),top=Math.min(...points.map(p=>p[1]));
+const width=Math.max(...points.map(p=>p[0]))-left,height=Math.max(...points.map(p=>p[1]))-top;
+const svg=`<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Six-port injection valve example: autosampler and sample loop, HPLC pump, column, detector, and waste outlets" viewBox="${left} ${top} ${width} ${height}" font-family="Segoe UI,Arial,sans-serif">${markup}</svg>\n`;
+fs.writeFileSync(path.join(root,'public/assets/fluid-preview.svg'),svg);
+console.log('Built fluid-preview.svg from the six-port injection valve example.');
