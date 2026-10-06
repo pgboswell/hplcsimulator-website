@@ -71,3 +71,5 @@
 
 .sim-notes .calculation-section{margin:14px 0;padding:16px 18px;background:#fff;border:1px solid #d5daeb;border-radius:7px}.sim-notes .calculation-section>summary{font-weight:600;line-height:1.5}.sim-notes .calculation-section h4{font-size:16px;margin:22px 0 8px}.sim-notes .calculation-section p{line-height:1.75}.sim-notes .model-equation{overflow-wrap:anywhere}.sim-notes i sub{font-size:.78em}
 @media(max-width:550px){.sim-notes .calculation-section{padding:12px}.sim-notes .model-equation{padding:10px;font-size:16px}}
+
+.model-citation{font-size:.8em;white-space:nowrap;margin-left:.3em}.model-citation a{padding:0 2px}.model-references{margin-top:28px}.model-references h3{font-size:21px}.model-references li{font-size:15px;line-height:1.7;margin:0 0 14px;padding-left:4px;overflow-wrap:anywhere;scroll-margin-top:24px}.model-references li:target{background:#eef1fa;outline:2px solid #c9d1ee;border-radius:4px}
