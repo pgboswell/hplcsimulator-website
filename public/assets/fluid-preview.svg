@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HPLC flow path with a twin-piston pump, six-port injection valve, column with end fittings, and detector displaying chromatographic peaks" viewBox="0 0 620 175">
+<defs><pattern id="fluid-preview-grid" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r=".7" fill="#b8c2d5"/></pattern></defs>
+<rect width="620" height="175" fill="url(#fluid-preview-grid)"/>
+<g fill="none" stroke="#0072b2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<path d="M90 118v8q0 8 8 8h73q8 0 8-8V56q0-8 8-8h53"/>
+<path d="M265.98076211353316,63H282q8 0 8 8v-1q0 8 8 8h22"/>
+<path d="M480 78h8q8 0 8 8q0 5 5 5h9"/>
+<path d="M240 108v12q0 8 8 8h26q8 0 8-8V101q0-8-8-8h-8"/>
+</g>
+<g transform="translate(30 28)"><rect x="2" y="2" width="116" height="86" rx="8" fill="#f4f6fd" stroke="#657398" stroke-width="2"/><g aria-hidden="true" fill="none" stroke="#46567a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 24V14h36v10M60 14V90" stroke="#379bb7" stroke-width="2.5"/>
+    <rect x="30" y="24" width="24" height="32" rx="4" fill="#fff"/>
+      <path d="M34 28h16v13h-16Z" fill="#d9edf5" stroke="none"/>
+      <path d="M33 41h18" stroke-width="4"/>
+      <path d="M42 43V68" stroke-width="3"/>
+      <path d="M37 57h10M36 69h12"/>
+      <path d="M39 19l3-4 3 4-3 4Z" fill="#fff" stroke-width="1.5"/><rect x="66" y="24" width="24" height="32" rx="4" fill="#fff"/>
+      <path d="M70 28h16v7h-16Z" fill="#d9edf5" stroke="none"/>
+      <path d="M69 35h18" stroke-width="4"/>
+      <path d="M78 37V68" stroke-width="3"/>
+      <path d="M73 57h10M72 69h12"/>
+      <path d="M75 19l3-4 3 4-3 4Z" fill="#fff" stroke-width="1.5"/>
+    </g></g>
+<circle cx="240" cy="78" r="39" fill="#f0f2fa" stroke="#657398" stroke-width="2"/>
+<path d="M240,48L265.98076211353316,63" stroke="#0072b2" stroke-width="7" stroke-linecap="round"/><path d="M265.98076211353316,93L240,108" stroke="#f58220" stroke-width="7" stroke-linecap="round"/><path d="M214.01923788646684,93L214.01923788646684,63" stroke="#f58220" stroke-width="7" stroke-linecap="round"/>
+<g transform="translate(320 48)"><path d="M0 30H160" stroke="#657398" stroke-width="4"/><rect x="22" y="18" width="116" height="24" rx="3" fill="#e0e4f5" stroke="#657398" stroke-width="2"/><path d="M44 21v18" stroke="#a6b0cd"/><path d="M54 21v18" stroke="#a6b0cd"/><path d="M64 21v18" stroke="#a6b0cd"/><path d="M74 21v18" stroke="#a6b0cd"/><path d="M84 21v18" stroke="#a6b0cd"/><path d="M94 21v18" stroke="#a6b0cd"/><path d="M104 21v18" stroke="#a6b0cd"/><path d="M114 21v18" stroke="#a6b0cd"/><path d="M8 13l5-5h18l5 5v34l-5 5h-18l-5-5Z" fill="#d2d9e9" stroke="#657398" stroke-width="2" stroke-linejoin="round"/><path d="M8 19h28v22h-28Z" fill="#eef1f8" stroke="#657398" stroke-width="1"/><path d="M124 13l5-5h18l5 5v34l-5 5h-18l-5-5Z" fill="#d2d9e9" stroke="#657398" stroke-width="2" stroke-linejoin="round"/><path d="M124 19h28v22h-28Z" fill="#eef1f8" stroke="#657398" stroke-width="1"/></g>
+<g transform="translate(510 43) scale(.8)"><rect x="2" y="2" width="116" height="86" rx="8" fill="#f4f6fd" stroke="#657398" stroke-width="2"/><path d="M0 60H12V48 L12 48.00 L13 48.00 L14 48.00 L15 48.00 L16 48.00 L17 48.00 L18 48.00 L19 48.00 L20 48.00 L21 48.00 L22 48.00 L23 48.00 L24 48.00 L25 48.00 L26 48.00 L27 48.00 L28 48.00 L29 48.00 L30 48.00 L31 48.00 L32 48.00 L33 48.00 L34 48.00 L35 48.00 L36 47.99 L37 47.97 L38 47.90 L39 47.72 L40 47.29 L41 46.36 L42 44.62 L43 41.77 L44 37.72 L45 32.84 L46 27.98 L47 24.35 L48 23.00 L49 24.35 L50 27.98 L51 32.84 L52 37.72 L53 41.77 L54 44.62 L55 46.36 L56 47.29 L57 47.72 L58 47.90 L59 47.97 L60 47.99 L61 48.00 L62 48.00 L63 48.00 L64 47.99 L65 47.98 L66 47.95 L67 47.90 L68 47.78 L69 47.57 L70 47.21 L71 46.61 L72 45.70 L73 44.40 L74 42.68 L75 40.56 L76 38.18 L77 35.75 L78 33.56 L79 31.92 L80 31.08 L81 31.17 L82 32.19 L83 33.96 L84 36.23 L85 38.67 L86 41.01 L87 43.05 L88 44.69 L89 45.91 L90 46.75 L91 47.30 L92 47.63 L93 47.81 L94 47.91 L95 47.96 L96 47.98 L97 47.99 L98 48.00 L99 48.00 L100 48.00 L101 48.00 L102 48.00 L103 48.00 L104 48.00 L105 48.00 L106 48.00 L107 48.00 L108 48.00 V30H120" stroke="#202396" stroke-width="2" fill="none" stroke-linejoin="round"/></g>
+<circle cx="90" cy="118" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="320" cy="78" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="480" cy="78" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="510" cy="91" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="240" cy="48" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="265.98076211353316" cy="63" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="265.98076211353316" cy="93" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="240" cy="108" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="214.01923788646684" cy="93" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/><circle cx="214.01923788646684" cy="63" r="4" fill="#0072b2" stroke="white" stroke-width="1.5"/>
+<g fill="#283451" font-family="Segoe UI,Arial,sans-serif" font-size="14" font-weight="600" text-anchor="middle"><text x="90" y="162">Pump</text><text x="240" y="162">Injection valve</text><text x="400" y="162">Column</text><text x="558" y="162">Detector</text></g></svg>

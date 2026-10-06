@@ -44,14 +44,8 @@ def chart(compact=False):
     return f'<svg role="img" aria-label="Illustrative chromatogram comparing two separations; not simulated data" viewBox="0 0 {width} {height}"><g stroke="#e0e5f3" stroke-width=".8">{grid}</g><g fill="#727e97" font-family="Arial,sans-serif" font-size="9">{ticks}<text x="250" y="244" text-anchor="middle">Time (min)</text><text x="14" y="120" transform="rotate(-90 14 120)" text-anchor="middle">Detector response</text></g>{"".join(traces)}</svg>'
 
 def fluid():
-    return '''<svg role="img" aria-label="Illustrative HPLC flow path from solvent through a pump, injection valve, column, and detector" viewBox="0 0 480 145">
-    <g fill="none" stroke="#a7b1d0" stroke-width="1.4"><path d="M21 46v-9h24v9l5 10v43H16V56Z" fill="#f8faff"/><path d="M19 70h28v26H19Z" fill="#d4dcf4" stroke="none"/>
-    <path d="M33 61V25h41v47h40M158 72h54M248 72h38M377 72h30M449 72h16v34" stroke="#5969b5" stroke-width="3"/>
-    <rect x="91" y="47" width="66" height="50" rx="8" fill="#fafbff"/><circle cx="124" cy="71" r="13"/><path d="m120 64 9 7-9 7Z" fill="#505fac" stroke="none"/>
-    <circle cx="230" cy="72" r="22" fill="#f9faff"/><circle cx="230" cy="72" r="8"/><path d="m214 61 32 22" stroke="#b57437" stroke-width="3"/>
-    <rect x="284" y="61" width="94" height="22" rx="4" fill="#dfe5f7"/><path d="M290 57v30M372 57v30M300 63v18M308 63v18M316 63v18M324 63v18M332 63v18M340 63v18M348 63v18M356 63v18M364 63v18"/>
-    <rect x="406" y="48" width="45" height="48" rx="6" fill="#fafbff"/><path d="M412 80h7l3-17 5 17 4-9 4 9h10" stroke="#b57437"/>
-    </g><g fill="#606b85" font-family="Arial,sans-serif" font-size="9" text-anchor="middle"><text x="33" y="120">Solvent</text><text x="124" y="120">Pump</text><text x="230" y="120">Injector</text><text x="332" y="120">Column</text><text x="430" y="120">Detector</text></g></svg>'''
+    return (PUBLIC/'assets/fluid-preview.svg').read_text(encoding='utf-8')
+
 
 def canonical_url(file):
     return "https://hplcsimulator.org/" + ("" if file == "index.html" else file.removesuffix(".html"))
