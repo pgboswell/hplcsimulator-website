@@ -1,6 +1,6 @@
 # HPLC Fluid Visualizer browser port
 
-The local application is `fluid-visualizer.html`. It is a dependency-free JavaScript/SVG port of the original Java HPLC Fluid Visualization application. Original authors: Paul Boswell and Jon Thompson. Original license: CC BY-NC-SA 3.0 US.
+The local application is `fluid-visualizer.html`. It is a dependency-free JavaScript/SVG port of the original Java HPLC Fluid Visualization application. Original authors: Paul Boswell and Jon Thompson. License: CC BY-NC-SA 3.0 US.
 
 ## Included
 

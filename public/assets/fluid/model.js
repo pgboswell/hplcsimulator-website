@@ -1,5 +1,5 @@
 /* HPLC Fluid Visualizer. Port of the Paul Boswell / Jon Thompson Java model.
- * Original software: CC BY-NC-SA 3.0 US. All flows µL/min; pressure bar;
+ * License: CC BY-NC-SA 3.0 US. All flows µL/min; pressure bar;
  * dispersion is volume variance in mL²; delay min. Solvent 0 MeOH, 1 ACN.
  */
 (function (root) {

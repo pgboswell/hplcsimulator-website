@@ -36,3 +36,5 @@
 /* Give the complete injection-valve example room in the Home cards. */
 .tool-grid .tool-art{height:260px;padding:12px 18px}
 @media(max-width:780px){.tool-grid .tool-art{height:220px;padding:12px}}
+
+.license-link{display:inline-flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px}.license-link img{display:block;width:88px;height:31px;flex-shrink:0}

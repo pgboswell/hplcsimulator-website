@@ -18,7 +18,7 @@ The Fluid Visualizer is also included as a separate browser application.
 
 The model and data were ported from the supplied HPLC Simulator Java v1.16 project. The extracted database records its source SHA256 in `public/assets/simulator/compounds.js`. Original Java projects and private signing/build material are not included in this repository.
 
-Original contributors and the original CC BY-NC-SA 3.0 US software attribution are retained on the website. The Development downloads remain explicitly historical v1.1.3/v1.0 archives; they have not been relabeled as the supplied latest source.
+Contributor credits and the CC BY-NC-SA 3.0 US license attribution are retained on the website. The Development downloads remain explicitly historical v1.1.3/v1.0 archives; they have not been relabeled as the supplied latest source.
 
 ## Deliberate changes and retained approximations
 
